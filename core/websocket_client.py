@@ -1,7 +1,7 @@
 # websocket==0.2.1 클라이언트용 베스트
 # create_connection + 내부 WebSocket 핸들링
 
-import json
+import orjson
 import threading
 from websocket import create_connection, WebSocket
 from typing import Callable
@@ -50,6 +50,7 @@ class WSClient:
     def _start(self):
         if self._running:
             return
+        logger.debug(f"WS 연결 시도: {self.url}")
         self._ws = create_connection(self.url)
         self._running = True
         self._thread = threading.Thread(target=self._listen, daemon=True)
@@ -66,7 +67,7 @@ class WSClient:
             raise ConnectionError("WS 전송 실패, 재시도 필요")
 
     def send_json(self, payload: dict):
-        self.send_text(json.dumps(payload))
+        self.send_text(orjson.dumps(payload).decode("utf-8"))
 
     def close(self):
         self._running = False

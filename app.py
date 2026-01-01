@@ -2,11 +2,12 @@ import streamlit as st
 from core.session import ChatSession
 from core.websocket_client import WSClient
 import queue
-from service.rag_svc import call_rag_api
+from service.rag_svc import call_rag_api, call_rag_pipeline_api
 from core.logging import setup_logging
 import time
 from pprint import pformat
 import orjson
+from core.config import settings
 
 # 로거 초기화
 logger = setup_logging()
@@ -23,7 +24,7 @@ def get_ws_client():
         logger.info(f"[WS 콜백] 메시지 수신: {msg[:100]}...")
 
     client = WSClient(
-        "ws://rag-api.local/rag-api/ws?client_id=1&role=alarm", on_text=on_ws_msg
+        f"{settings.websocket_url}?client_id=1&role=alarm", on_text=on_ws_msg
     )
     return client, q
 
@@ -59,16 +60,15 @@ def main():
     uploaded = st.file_uploader("PDF/파일 업로드")
     query = st.text_area("질문 입력", height=100)
 
-    col1, col3, col2 = st.columns([1, 3, 1])
+    col1, col3, col2 = st.columns([1, 1, 2])
     with col1:
         submit_btn = st.button(
             "질의", type="primary", disabled=st.session_state.is_waiting
         )
     with col3:
-        if st.session_state.is_waiting:
-            st.info("메시지 대기중")
-        else:
-            st.info("수신완료")
+        upload_btn = st.button(
+            "업로드", type="primary", disabled=st.session_state.is_waiting
+        )
     with col2:
         if st.button("초기화"):
             st.session_state.messages = []
@@ -81,17 +81,33 @@ def main():
             st.rerun()
 
     # 질의 버튼 클릭 처리
-    if submit_btn and query.strip():
-        file_path = None
-        if uploaded:
+    if upload_btn:
+        if not uploaded:
+            st.warning("업로드할 파일을 선택하세요.")
+        else:
+            st.session_state.waiting_start_time = time.time()
             file_path = f"/tmp/{uploaded.name}"
             with open(file_path, "wb") as f:
                 f.write(uploaded.read())
 
-        payload = {"query": query, "file": file_path}
+            try:
+                ws.send_text("[upload file] " + uploaded.name)
+                # RAG 파이프라인 서비스 호출
+                call_rag_pipeline_api(upload_file=uploaded)
+
+                st.session_state.is_waiting = True
+                logger.info(f"파일 업로드 전송: {uploaded.name}")
+
+            except Exception as e:
+                st.session_state.is_waiting = False
+                st.error(f"업로드 전송 실패: {str(e)}")
+                logger.error(f"업로드 전송 오류: {e}")
+
+    if submit_btn and query.strip():
+        st.session_state.waiting_start_time = time.time()
 
         try:
-            ws.send_text("CALL: " + str(payload))
+            ws.send_text("[LLM 질의] " + query)
             # RAG 서비스 호출
             call_rag_api(query)
 
@@ -105,31 +121,43 @@ def main():
 
     # 수신대기 상태 중, 큐확인 및 화면갱신
     if st.session_state.is_waiting:
+
         messages_received = []
         while not msg_queue.empty():
             msg = msg_queue.get_nowait()
-            try:
-                recv_msg = orjson.loads(msg)
-                # 최종 메시지
-                if "value" in recv_msg:
-                    st.session_state.is_waiting = False
-            except orjson.JSONDecodeError:
-                recv_msg = msg
+            messages_received.append(msg)
 
-            messages_received.append(recv_msg)
-            logger.info(f"메시지 처리: {recv_msg}...")
-
+            logger.info(f"메시지 처리: {msg}...")
+            if "value" in msg:
+                # 답변 메시지인 경우, 완료처리
+                st.session_state.is_waiting = False
+                break
         # 새 메시지가 있으면 추가하고 rerun
         if messages_received:
             st.session_state.messages.extend(messages_received)
 
-    # 답변 표시
+        # timeout
+        if st.session_state.waiting_start_time + 30 < time.time():
+            st.session_state.is_waiting = False
+
+    # 화면 출력 처리
     if st.session_state.messages:
         st.divider()
         st.subheader(f"📝 답변 ({len(st.session_state.messages)}개 메시지)")
 
+        def _extract_body(msg: str | dict) -> str:
+            if isinstance(msg, dict):
+                _value = msg.get("value", "{'answer': 'no answer'}")
+                if isinstance(_value, dict):
+                    return _value["answer"]
+                return str(orjson.loads(_value)["answer"])
+            else:
+                return msg
+
         # 전체 답변
-        combined = "\n\n".join([str(msg) for msg in st.session_state.messages])
+        combined = "\n\n".join(
+            [_extract_body(msg) for msg in st.session_state.messages]
+        )
         st.text_area("전체 내용", combined, height=200)
 
         # 개별 메시지
@@ -144,8 +172,8 @@ def main():
         st.metric("큐 대기 중", msg_queue.qsize())
 
         # 자동 새로고침 설정
-        auto_refresh = st.checkbox("자동 새로고침", value=True)
-        if auto_refresh and st.session_state.is_waiting:
+        auto_refresh = st.checkbox("자동 새로고침", value=False)
+        if auto_refresh:
             refresh_interval = st.slider("새로고침 간격 (초)", 0.5, 5.0, 1.0, 0.5)
 
             if msg_queue.qsize() > 0:
@@ -156,7 +184,7 @@ def main():
             time.sleep(refresh_interval)
             st.rerun()
         else:
-            if st.button("수동 새로고침") and st.session_state.is_waiting:
+            if st.button("수동 새로고침"):
                 st.rerun()
 
 
