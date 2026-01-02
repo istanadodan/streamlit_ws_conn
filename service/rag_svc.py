@@ -5,7 +5,7 @@ from core.config import settings
 
 def call_rag_api(message: str):
     endpoint = f"{settings.rag_api_url}/app/query_by_rag"
-    data = QueryByRagRequest(query=message, top_k=3).model_dump(by_alias=True)
+    data = QueryByRagRequest(query=message, top_k=1).model_dump(by_alias=True)
 
     response = requests.post(endpoint, json=data)
     if response.status_code != 200:
