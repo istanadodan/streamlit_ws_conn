@@ -1,8 +1,8 @@
 import streamlit as st
 from core.logging import setup_logging
 import queue
-from utils.ws_client import get_ws_client
-from handlers import msg_queue, chat
+from utils.websocket import handler as ws_handler
+from handlers import chat
 from ui import sidebar, session, answers
 import time
 
@@ -27,9 +27,13 @@ def main():
 
     session.initailize_ss_state()
 
-    _, q = get_ws_client()
+    _, q = ws_handler.get_ws_client()
     is_waiting = st.session_state.ui_state.is_waiting
-    logger.info(f"UI State: {st.session_state.ui_state.__dict__}")
+    if (
+        len(st.session_state.ui_state.messages) > 0
+        and "hits" in st.session_state.ui_state.messages[:-1]
+    ):
+        logger.info(f"UI State: {st.session_state.ui_state.__dict__}")
 
     # 사이드바
     with st.sidebar:
@@ -51,15 +55,13 @@ def main():
                     q.get_nowait()
                 except queue.Empty:
                     break
+            st.rerun()
 
     # 수신대기 상태 중, 큐확인 및 화면갱신
-    if is_waiting:
-        msg_queue.checking_message_queue()
+    ws_handler.checking_message_queue(is_waiting)
 
     # 화면 출력 처리
-    if st.session_state.ui_state.messages:
-        st.divider()
-        answers.print_messages(st.session_state.ui_state.messages)
+    answers.print_messages()
 
     if st.session_state.is_rerun:
         time.sleep(st.session_state.refresh_interval)

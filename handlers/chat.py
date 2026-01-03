@@ -1,6 +1,6 @@
 import streamlit as st
 import time
-from utils.ws_client import get_ws_client
+from utils.websocket.handler import get_ws_client
 from service.rag_svc import call_rag_api
 import logging
 
@@ -21,7 +21,6 @@ def on_chat(query: str):
         call_rag_api(query)
 
         st.session_state.ui_state.change_waiting_state(True)
-        logger.info(f"질의 전송: {query}")
 
     except Exception as e:
         st.session_state.ui_state.change_waiting_state(False)

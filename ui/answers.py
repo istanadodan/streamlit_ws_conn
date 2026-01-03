@@ -1,14 +1,21 @@
 import streamlit as st
-import orjson
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # 응답 출력
-def print_messages(messages: list[str | dict]):
+def print_messages():
+    messages = st.session_state.ui_state.messages
+    if not messages:
+        return
+
+    st.divider()
     st.subheader(f"📝 답변 ({len(messages)}개 메시지)")
 
     # 전체 답변
-    combined = "\n\n".join([_parse_msg(msg) for msg in messages])
-    st.text_area("전체 내용", combined, height=200)
+    combined = "\n\n".join([_parse_msg(msg) for msg in messages]) if messages else ""
+    st.text_area("전체 내용", combined, height=200, disabled=True)
 
     # 개별 메시지
     with st.expander("📦 개별 메시지 보기", expanded=False):

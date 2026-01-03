@@ -37,7 +37,7 @@ class WSClient:
         while self._running:
             try:
                 msg = self._ws.recv()
-                if not msg:
+                if msg is None or not msg.strip():
                     continue
                 if self._callback:
                     self._callback(orjson.loads(msg))

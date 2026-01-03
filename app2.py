@@ -1,7 +1,7 @@
 import streamlit as st
 from core.session import ChatSession
 from core.llm_client import LLMClient
-from core.websocket_client import WSClient
+from utils.websocket.websocket_client import WSClient
 import queue
 from service.rag_svc import call_rag_api
 from core.logging import setup_logging

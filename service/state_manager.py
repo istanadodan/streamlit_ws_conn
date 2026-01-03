@@ -31,7 +31,7 @@ class UIState:
         """
         Check if the message is complete.
         """
-        if isinstance(msg, dict) and "hits" in msg and msg["hits"]:
+        if isinstance(msg, dict) and msg.get("answer", None) and msg.get("hits", None):
             # 답변 메시지인 경우, 완료처리
             self.change_waiting_state(False)
             return True

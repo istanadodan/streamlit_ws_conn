@@ -1,6 +1,6 @@
 import streamlit as st
 from core.session import ChatSession
-from utils.state_manager import UIState
+from service.state_manager import UIState
 
 
 # session_state 초기화
