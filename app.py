@@ -29,20 +29,21 @@ def main():
 
     _, q = get_ws_client()
     is_waiting = st.session_state.ui_state.is_waiting
+    logger.info(f"UI State: {st.session_state.ui_state.__dict__}")
 
     # 사이드바
     with st.sidebar:
         sidebar.load_sidebar(q)
 
     # 입력항목 - chat 질의문
-    query = st.text_area("질문 입력", height=100)
+    query = st.text_area("질문 입력", height=80)
     col1, col2 = st.columns([1, 2])
     with col1:
         if st.button("질의", type="primary", disabled=is_waiting):
             chat.on_chat(query)
 
     with col2:
-        if st.button("초기화"):
+        if st.button("초기화", disabled=is_waiting):
             st.session_state.ui_state.initialize()
             # 큐 비우기
             while not q.empty():

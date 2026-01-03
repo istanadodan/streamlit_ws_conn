@@ -18,14 +18,6 @@ def print_messages(messages: list[str | dict]):
 
 def _parse_msg(msg: str | dict) -> str:
     if isinstance(msg, dict):
-        _value = msg.get("value", "{'answer': 'no answer'}")
-        try:
-            return (
-                _value["answer"]
-                if isinstance(_value, dict)
-                else orjson.loads(_value)["answer"]
-            )
-        except:
-            return str(_value)
+        return msg.get("answer", "no answer")
     else:
         return msg

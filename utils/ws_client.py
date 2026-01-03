@@ -9,13 +9,13 @@ logger = logging.getLogger(__name__)
 
 # websocket connection을 cache로 저장하는 함수
 @st.cache_resource
-def get_ws_client():
+def get_ws_client() -> tuple:
     q = queue.Queue()
 
-    def on_ws_msg(msg: str):
+    def on_ws_msg(msg: dict):
         # 큐에 적재 (백그라운드 스레드)
-        q.put(msg)
-        logger.info(f"[WS 콜백] 메시지 수신: {msg[:100]}...")
+        q.put(msg["value"])
+        logger.info(f"[WS 콜백] 메시지 수신: {msg['value']}...")
 
     client = WSClient(
         f"{settings.websocket_url}?client_id=1&role=alarm", on_text=on_ws_msg

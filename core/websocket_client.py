@@ -37,14 +37,17 @@ class WSClient:
         while self._running:
             try:
                 msg = self._ws.recv()
-                if isinstance(msg, str) and self._callback:
-                    # logger.info("WS 메시지 수신: %s", msg)
-                    self._callback(msg)
-            except Exception:
+                if not msg:
+                    continue
+                if self._callback:
+                    self._callback(orjson.loads(msg))
+            except orjson.JSONDecodeError as e:
+                logger.error(f"WS 메시지 파싱 오류: {e}")
+            except Exception as e:
+                logger.error(f"WS 오류: {e}")
                 self._running = False
                 break
-            # time.sleep(2)
-        logger.info("WS 종료 후 재시작")
+        logger.info("WS 종료 후, healthcheck 중 재시작")
         self.close()
 
     def _start(self):

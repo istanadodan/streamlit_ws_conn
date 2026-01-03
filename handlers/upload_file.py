@@ -12,7 +12,7 @@ def on_upload_file(uploaded):
         st.warning("업로드할 파일을 선택하세요.")
     else:
         st.session_state.waiting_start_time = time.time()
-        file_path = f"/tmp/{uploaded.name}"
+        # file_path = f"/tmp/{uploaded.name}"
         # with open(file_path, "wb") as f:
         #     f.write(uploaded.read())
 
