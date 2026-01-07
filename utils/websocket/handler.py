@@ -1,6 +1,6 @@
 import streamlit as st
 import queue, logging
-from utils.websocket.websocket_client import WSClient
+from utils.websocket.ws_client import WSClient
 from core.config import settings
 from pprint import pformat
 
@@ -47,7 +47,7 @@ def checking_message_queue(is_waiting: bool):
             break
 
     # 새 메시지가 있으면 추가하고 rerun
-    st.session_state.ui_state.messages.extend(messages_received)
+    st.session_state.ui_state.messages = messages_received
 
     # timeout check
     st.session_state.ui_state.check_timeout()

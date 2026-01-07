@@ -15,9 +15,25 @@ class UIState:
         """
         self.is_waiting = False
         self.waiting_start_time = 0.0
-        self.messages = []
+        self._messages = []
         self.message_count = 0
         self.message_queue = []
+
+    @property
+    def messages(self):
+        return self._messages
+
+    @property
+    def queue(self):
+        return self.message_queue
+
+    @messages.setter
+    def messages(self, messages):
+        self._messages.extend(messages)
+        self.message_queue.extend(messages)
+
+    def reset_messages(self):
+        self._messages = []
 
     def check_timeout(self, timeout_sec: int = 1800):
         if self.is_waiting and self.waiting_start_time + timeout_sec < time.time():

@@ -11,7 +11,7 @@
       "module": "streamlit",
       "args": [
         "run",
-        "app.py",
+        "app3.py",
         "--server.port",
         "8501"
       ],

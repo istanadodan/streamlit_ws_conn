@@ -18,3 +18,14 @@ def initailize_ss_state():
 
     if "refresh_interval" not in st.session_state:
         st.session_state.refresh_interval = 0
+
+    if "auto_refresh" not in st.session_state:
+        st.session_state.auto_refresh = False
+
+    if (
+        "_enable_auto_refresh" in st.session_state
+        and st.session_state._enable_auto_refresh
+    ):
+        st.session_state.auto_refresh = True
+    else:
+        st.session_state.auto_refresh = False
