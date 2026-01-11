@@ -1,6 +1,6 @@
 import streamlit as st
 from service.rag_svc import call_rag_pipeline_api
-from core.websocket import get_ws_client
+from ui import get_ws_client
 import time, logging
 
 logger = logging.getLogger(__name__)

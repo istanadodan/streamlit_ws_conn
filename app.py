@@ -1,11 +1,10 @@
 import streamlit as st
-from core.logging import setup_logging
 import queue
-from core import websocket as ws_handler
-from service.query import chat
-from ui import sidebar, session, answers
 import time
+import ui
+from core.logging import setup_logging
 from service.pipeline import upload_file
+from service.query import chat
 
 # 로거 초기화
 logger = setup_logging()
@@ -25,19 +24,14 @@ def main():
     )
     # UI 구성
     st.title("LLM WebSocket Demo")
-    session.initailize_ss_state()
+    ui.session.initailize_ss_state()
 
-    q = ws_handler.get_ws_client().queue
+    q = ui.get_ws_client().queue
     is_waiting = st.session_state.ui_state.is_waiting
-    if (
-        len(st.session_state.ui_state.messages) > 0
-        and "hits" in st.session_state.ui_state.messages[:-1]
-    ):
-        logger.info(f"UI State: {st.session_state.ui_state.__dict__}")
 
     # ---------- sidebar ----------
     with st.sidebar:
-        sidebar.load_sidebar(q)
+        ui.sidebar.load_sidebar(q)
 
     # ---------- 입력항목 - chat 질의문 ----------
     query = st.text_area("질문 입력", height=80)
@@ -66,10 +60,10 @@ def main():
             st.rerun()
 
     # ---------- 수신대기 상태 중, 큐확인 및 화면갱신 ----------
-    ws_handler.update_msg_state(is_waiting)
+    ui.update_msg_state(is_waiting)
 
     # ---------- 화면 출력 처리 ----------
-    answers.print_messages()
+    ui.answers.print_messages()
 
     # ---------- Bottom Area ----------
     st.divider()

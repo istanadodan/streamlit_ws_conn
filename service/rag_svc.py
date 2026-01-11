@@ -1,6 +1,6 @@
 import requests
 from streamlit.runtime.uploaded_file_manager import UploadedFile
-from schemas.query import QueryByRagRequest
+from service.dto import QueryByRagRequest
 from core.config import settings
 
 

@@ -1,7 +1,8 @@
-import streamlit as st
 import queue, logging
 from core.websocket.client import WSClient
 from core.config import settings
+from ui.session import get_ui_state, UIState, st
+from ui import sidebar, session, answers
 
 logger = logging.getLogger(__name__)
 
@@ -23,20 +24,24 @@ def get_ws_client(client_id=1, role="alarm") -> WSClient:
 def update_msg_state(is_waiting: bool) -> None:
     if not is_waiting:
         return
+    # 상태변수 취득
+    ss: UIState | None = get_ui_state()
+
     messages_received = []
     for msg in _get_ws_data():
         messages_received.append(msg)
 
         logger.info(f"메시지 처리: {msg}...")
 
-        if st.session_state.ui_state.check_complete(msg):
+        if ss and ss.check_complete(msg):
             break
 
-    # 새 메시지가 있으면 추가하고 rerun
-    st.session_state.ui_state.messages = messages_received
+    if ss:
+        # 새 메시지가 있으면 추가하고 rerun
+        ss.messages = messages_received
 
-    # timeout check
-    st.session_state.ui_state.check_timeout(600)
+        # timeout check
+        ss.check_timeout(600)
 
 
 def _get_ws_data():

@@ -1,5 +1,5 @@
 import streamlit as st
-from core.websocket import get_ws_client
+from ui import get_ws_client
 from service.rag_svc import call_rag_api
 import logging
 
