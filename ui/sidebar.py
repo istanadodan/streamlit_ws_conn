@@ -25,16 +25,17 @@ def load_sidebar(mq: queue.Queue):
     refresh_container = st.container(border=True, width="stretch")
     with refresh_container:
         st.markdown("### 새로고침 설정")
-        auto_refresh = st.checkbox("자동 새로고침", key="auto_refresh")
-        st.session_state.is_rerun = False
-        st.session_state.refresh_interval = 0
+        auto_refresh = st.checkbox("자동상태")
+
         if auto_refresh:
             st.session_state.refresh_interval = st.slider(
                 "새로고침 간격 (초)", 0.5, 5.0, 1.0, 0.5
             )
-
             st.session_state.is_rerun = True
-
+            st.session_state.auto_refresh = True
         else:
+            st.session_state.is_rerun = False
+            st.session_state.auto_refresh = False
+            st.session_state._enable_auto_refresh = False
             if st.button("수동 새로고침"):
                 st.session_state.is_rerun = True

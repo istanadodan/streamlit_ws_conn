@@ -1,6 +1,6 @@
 import streamlit as st
 from core.session import ChatSession
-from service.state_manager import UIState
+from core.state_manager import UIState
 
 
 # session_state 초기화
@@ -22,10 +22,5 @@ def initailize_ss_state():
     if "auto_refresh" not in st.session_state:
         st.session_state.auto_refresh = False
 
-    if (
-        "_enable_auto_refresh" in st.session_state
-        and st.session_state._enable_auto_refresh
-    ):
-        st.session_state.auto_refresh = True
-    else:
-        st.session_state.auto_refresh = False
+    if "_enable_auto_refresh" not in st.session_state:
+        st.session_state._enable_auto_refresh = False

@@ -6,20 +6,25 @@ import threading
 from websocket import create_connection, WebSocket
 from typing import Callable
 import logging
-import time
+from queue import Queue
 
 logger = logging.getLogger(__name__)
 
 
 class WSClient:
-    def __init__(self, url: str, on_text: Callable):
+    def __init__(self, url: str, q: Queue, on_text: Callable):
         self.url = url
         self._callback = on_text
         self._ws: WebSocket
         self._thread = None
         self._running = False
+        self._q: Queue = q
         # 헬스체크 개시
         threading.Thread(target=self.healthcheck, daemon=True).start()
+
+    @property
+    def queue(self):
+        return self._q
 
     def healthcheck(self):
         import time

@@ -1,7 +1,7 @@
 import streamlit as st
-import time, logging
 from service.rag_svc import call_rag_pipeline_api
-from utils.websocket.handler import get_ws_client
+from core.websocket import get_ws_client
+import time, logging
 
 logger = logging.getLogger(__name__)
 
@@ -12,11 +12,7 @@ def on_upload_file(uploaded):
         st.warning("업로드할 파일을 선택하세요.")
     else:
         st.session_state.waiting_start_time = time.time()
-        # file_path = f"/tmp/{uploaded.name}"
-        # with open(file_path, "wb") as f:
-        #     f.write(uploaded.read())
-
-        ws_client, _ = get_ws_client()
+        ws_client = get_ws_client()
         try:
             ws_client.send_text("[upload file] " + uploaded.name)
             # RAG 파이프라인 서비스 호출
