@@ -1,20 +1,20 @@
 import streamlit as st
 from service.rag_svc import call_rag_pipeline_api
-from ui import get_ws_client
+from ui.message import get_client
 import time, logging
 
 logger = logging.getLogger(__name__)
 
 
-def on_upload_file(uploaded):
+def call_pipeline_api(uploaded):
     # 이벤트 처리
     if not uploaded:
         st.warning("업로드할 파일을 선택하세요.")
     else:
         st.session_state.waiting_start_time = time.time()
-        ws_client = get_ws_client()
+        ws = get_client()
         try:
-            ws_client.send_text("[upload file] " + uploaded.name)
+            ws.send_text("[upload file] " + uploaded.name)
             # RAG 파이프라인 서비스 호출
             call_rag_pipeline_api(upload_file=uploaded)
 

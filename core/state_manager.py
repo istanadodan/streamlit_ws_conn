@@ -53,6 +53,7 @@ class UIState:
         if isinstance(msg, dict) and all([key in msg for key in ["answer", "hits"]]):
             # 답변 메시지인 경우, 완료처리
             self.change_waiting_state(False)
+            logger.info(f"대기상태 변경 완료: {self.is_waiting}")
             return True
         return False
 

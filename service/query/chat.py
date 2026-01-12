@@ -1,20 +1,19 @@
 import streamlit as st
-from ui import get_ws_client
+from ui.message import get_client
 from service.rag_svc import call_rag_api
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-def on_chat(query: str, top_k, llm, retriever: str):
+def call_chat_api(query: str, top_k, llm, retriever: str):
     if not query:
         st.warning("질문을 입력해주세요")
         return
 
-    query = query.strip()
-    ws_client = get_ws_client()
+    ws = get_client()
     try:
-        ws_client.send_text("[LLM 질의] " + query)
+        ws.send_text("[LLM 질의] " + query)
         # RAG 서비스 호출
         call_rag_api(query, top_k, llm, retriever)
 

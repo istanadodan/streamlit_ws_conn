@@ -1,10 +1,10 @@
 import streamlit as st
 import queue
 import time
-import ui
+import ui.message as message
 from core.logging import setup_logging
-from service.pipeline import upload_file
-from service.query import chat
+from service.pipeline import upload_file as pipeline_svc
+from service.query import chat as chat_svc
 
 # 로거 초기화
 logger = setup_logging()
@@ -24,29 +24,32 @@ def main():
     )
     # UI 구성
     st.title("LLM WebSocket Demo")
-    ui.session.initailize_ss_state()
+    message.session.initailize_ss_state()
 
-    q = ui.get_ws_client().queue
+    q = message.get_client().queue
     is_waiting = st.session_state.ui_state.is_waiting
 
     # ---------- sidebar ----------
     with st.sidebar:
-        ui.sidebar.load_sidebar(q)
+        message.sidebar.load_sidebar(q)
 
     # ---------- 입력항목 - chat 질의문 ----------
-    query = st.text_area("질문 입력", height=80)
-    col1, col2 = st.columns([1, 2])
+    query = st.text_area("질문 입력", height=80).strip()
+    col1, col2 = st.columns([10, 1])
     with col1:
-        if st.button("질의", type="primary", disabled=is_waiting):
-            chat.on_chat(
-                query,
-                st.session_state.top_k,
-                st.session_state.llm_model,
-                st.session_state.retriever,
-            )
-            st.session_state.ui_state.change_waiting_state(True)
-            st.session_state.ui_state.reset_messages()
-            st.rerun()
+        if st.button("질의", type="primary", disabled=is_waiting or not query):
+            if query:
+                chat_svc.call_chat_api(
+                    query,
+                    st.session_state.top_k,
+                    st.session_state.llm_model,
+                    st.session_state.retriever,
+                )
+                st.session_state.ui_state.change_waiting_state(True)
+                st.session_state.ui_state.reset_messages()
+                st.rerun()
+            else:
+                st.warning("질의를 입력해주세요.")
 
     with col2:
         if st.button("초기화", disabled=is_waiting):
@@ -60,10 +63,10 @@ def main():
             st.rerun()
 
     # ---------- 수신대기 상태 중, 큐확인 및 화면갱신 ----------
-    ui.update_msg_state(is_waiting)
+    message.update_msg_state(is_waiting)
 
     # ---------- 화면 출력 처리 ----------
-    ui.answers.print_messages()
+    message.answers.print_messages()
 
     # ---------- Bottom Area ----------
     st.divider()
@@ -71,13 +74,14 @@ def main():
 
     with tab1:
         # 입력항목 - 파일업로드
-        uploaded = st.file_uploader(
+        file = st.file_uploader(
             "PDF / TXT 업로드", type=["pdf", "txt"], accept_multiple_files=False
         )
         if st.button(
             "업로드", type="primary", disabled=st.session_state.ui_state.is_waiting
         ):
-            upload_file.on_upload_file(uploaded)
+            st.session_state.ui_state.change_waiting_state(True)
+            pipeline_svc.call_pipeline_api(file)
 
     with tab2:
         st.caption("WebSocket Stream Monitor")
