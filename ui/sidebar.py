@@ -10,12 +10,18 @@ def load_sidebar(mq: queue.Queue):
         ["studio", "openai"],
         index=0,
     )
-    st.session_state.top_k = st.slider("Top-k", 1, 5, 1)
-    st.session_state.retriever = st.selectbox(
-        "Retriever",
-        ["qdrant", "multiQuery", "selfQuery"],
-        index=0,
-    )
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        st.session_state.top_k = st.slider("Top-k", 1, 5, 1)
+        st.session_state.retriever = st.selectbox(
+            "Retriever",
+            ["qdrant", "multiQuery", "selfQuery", "parentDocument"],
+            index=0,
+        )
+    with col2:
+        # agent가 rag가 좋을지 simple llm이 좋을지를 평가해서 호출을
+        # 결정하는 로직이 필요함
+        st.session_state.agent_mode = st.selectbox("에이전트", ["parsing", ""], index=1)
 
     col1, col2 = st.columns(2)
     col1.metric("수신된 메시지", len(st.session_state.ui_state.messages))

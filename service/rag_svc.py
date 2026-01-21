@@ -4,11 +4,22 @@ from service.dto import QueryByRagRequest
 from core.config import settings
 
 
-def call_rag_api(message: str, top_k: int, llm: str, retriever: str):
+def rag_query_svc(message: str, top_k: int, llm: str, retriever: str):
     endpoint = f"{settings.rag_api_url}/app/query_by_rag"
     data = QueryByRagRequest(
         query=message, top_k=top_k, llm=llm, retriever=retriever
     ).model_dump(by_alias=True)
+
+    response = requests.post(endpoint, json=data)
+    if response.status_code != 200:
+        return dict(answer=f"Error: {response.reason}")
+
+    return response.json()["result"]
+
+
+def agent_query_svc(message: str):
+    endpoint = f"{settings.rag_api_url}/agent/"
+    data = {"query": message}
 
     response = requests.post(endpoint, json=data)
     if response.status_code != 200:

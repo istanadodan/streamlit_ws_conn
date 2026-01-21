@@ -33,34 +33,55 @@ def main():
     with st.sidebar:
         message.sidebar.load_sidebar(q)
 
-    # ---------- 입력항목 - chat 질의문 ----------
-    query = st.text_area("질문 입력", height=80).strip()
-    col1, col2 = st.columns([10, 1])
-    with col1:
-        if st.button("질의", type="primary", disabled=is_waiting or not query):
-            if query:
-                chat_svc.call_chat_api(
-                    query,
-                    st.session_state.top_k,
-                    st.session_state.llm_model,
-                    st.session_state.retriever,
-                )
-                st.session_state.ui_state.change_waiting_state(True)
-                st.session_state.ui_state.reset_messages()
-                st.rerun()
-            else:
-                st.warning("질의를 입력해주세요.")
+    tab_llm, tab_agt = st.tabs(["LLM Chat", "LLM Agent"])
+    with tab_llm:
+        # ---------- 입력항목 - chat 질의문 ----------
+        query1 = st.text_area("질문 입력", height=80, key="llm_query_txt").strip()
+        col11, col12 = st.columns([10, 1])
+        with col11:
+            if st.button("RAG 질의", type="primary", disabled=is_waiting or not query1):
+                if query1:
+                    chat_svc.call_chat_api(
+                        query1,
+                        st.session_state.top_k,
+                        st.session_state.llm_model,
+                        st.session_state.retriever,
+                    )
+                    st.session_state.ui_state.change_waiting_state(True)
+                    st.session_state.ui_state.reset_messages()
+                    st.rerun()
+                else:
+                    st.warning("질의를 입력해주세요.")
 
-    with col2:
-        if st.button("초기화", disabled=is_waiting):
-            st.session_state.ui_state.initialize()
-            # 큐 비우기
-            while not q.empty():
-                try:
-                    q.get_nowait()
-                except queue.Empty:
-                    break
-            st.rerun()
+        with col12:
+            if st.button("초기화", disabled=is_waiting):
+                st.session_state.ui_state.initialize()
+                # 큐 비우기
+                while not q.empty():
+                    try:
+                        q.get_nowait()
+                    except queue.Empty:
+                        break
+                st.rerun()
+    with tab_agt:
+        query2 = st.text_area("질의 입력", height=80).strip()
+        col21, col22 = st.columns([10, 1])
+        with col21:
+            if st.button(
+                "Agent 질의", type="primary", disabled=is_waiting or not query2
+            ):
+                if query2:
+                    response = chat_svc.call_agent_api(query2)
+                    st.session_state.ui_state.messages.append(
+                        dict(answer=str(response))
+                    )
+                    st.rerun()
+                else:
+                    st.warning("질의를 입력해주세요.")
+        with col22:
+            if st.button("재시작", disabled=is_waiting):
+                st.session_state.ui_state.initialize()
+                st.rerun()
 
     # ---------- 수신대기 상태 중, 큐확인 및 화면갱신 ----------
     message.update_msg_state(is_waiting)

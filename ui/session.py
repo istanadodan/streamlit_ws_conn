@@ -19,6 +19,9 @@ def initailize_ss_state():
     if "_enable_auto_refresh" not in st.session_state:
         st.session_state._enable_auto_refresh = False
 
+    if "agent_mode" not in st.session_state:
+        st.session_state.agent_mode = ""
+
 
 def get_ui_state():
     if "ui_state" in st.session_state and st.session_state.ui_state:
