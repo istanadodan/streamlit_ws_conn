@@ -1,6 +1,6 @@
 import requests
 from streamlit.runtime.uploaded_file_manager import UploadedFile
-from service.dto import QueryByRagRequest
+from shemas.chat import QueryByRagRequest
 from core.config import settings
 
 
@@ -17,9 +17,9 @@ def rag_query_svc(message: str, top_k: int, llm: str, retriever: str):
     return response.json()["result"]
 
 
-def agent_query_svc(message: str):
+def agent_query_svc(message: str, llm: str):
     endpoint = f"{settings.rag_api_url}/agent/"
-    data = {"query": message}
+    data = {"query": message, "llm": llm}
 
     response = requests.post(endpoint, json=data)
     if response.status_code != 200:

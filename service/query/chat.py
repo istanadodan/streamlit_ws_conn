@@ -23,13 +23,13 @@ def call_chat_api(query: str, top_k, llm, retriever: str):
         logger.error(f"전송 오류: {e}")
 
 
-def call_agent_api(query: str):
+def call_agent_api(query: str, llm: str):
     if not query:
         st.warning("질문을 입력해주세요")
         return
 
     try:
-        return agent_query_svc(query)
+        return agent_query_svc(query, llm)
     except Exception as e:
         st.session_state.ui_state.change_waiting_state(False)
         st.error(f"전송 실패: {str(e)}")

@@ -50,7 +50,12 @@ class UIState:
         """
         Check if the message is complete.
         """
-        if isinstance(msg, dict) and all([key in msg for key in ["answer", "hits"]]):
+        logger.info(f"msg: {msg}, type:{type(msg)}")
+        if (
+            isinstance(msg, dict)
+            and all([key in msg for key in ["answer", "hits"]])
+            and msg["answer"]
+        ):
             # 답변 메시지인 경우, 완료처리
             self.change_waiting_state(False)
             logger.info(f"대기상태 변경 완료: {self.is_waiting}")

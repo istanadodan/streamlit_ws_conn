@@ -9,6 +9,7 @@ class Config(BaseSettings):
     debug_mode: bool = False
     rag_api_url: str = ""
     websocket_url: str = ""
+    SUPABASE_DB_URL: str = "postgresql://postgres:postgres@postgre:5432/postgres"
 
     model_config = {
         "env_file": f".env.{PROFILE}",

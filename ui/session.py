@@ -22,6 +22,9 @@ def initailize_ss_state():
     if "agent_mode" not in st.session_state:
         st.session_state.agent_mode = ""
 
+    if "pipeline_events" not in st.session_state:
+        st.session_state.pipeline_events = []
+
 
 def get_ui_state():
     if "ui_state" in st.session_state and st.session_state.ui_state:
